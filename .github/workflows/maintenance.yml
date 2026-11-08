@@ -1,0 +1,24 @@
+name: maintenance
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mantenimiento:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar mantenimiento
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          MAINTENANCE_URL: ${{ vars.MAINTENANCE_URL }}
+        run: |
+          test -n "$CRON_SECRET"
+          test -n "$MAINTENANCE_URL"
+          curl --fail-with-body --silent --show-error --location \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            "$MAINTENANCE_URL"

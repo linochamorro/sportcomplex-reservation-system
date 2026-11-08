@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+coverage/
+.next-test-results/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+.env.local
+docs/capturas-raw/

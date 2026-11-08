@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  SUPERADMIN
+  ADMIN
+  USUARIO
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  CONFIRMADA
+  RECHAZADA
+  LIBERADA
+  CANCELADA
+  NO_SHOW
+}
+
+enum PropositoComprobante {
+  PAGO
+  REEMBOLSO
+}
+
+enum AccionAfectada {
+  REASIGNADA
+  REEMBOLSADA
+  CANCELADA_SIN_REEMBOLSO
+}
+
+enum EstadoCancha {
+  DISPONIBLE
+  NO_DISPONIBLE
+}
+
+model Sede {
+  id           Int       @id @default(autoincrement())
+  nombre       String    @unique
+  direccion    String?
+  apertura     String    // HH:mm America/Lima
+  cierre       String    // HH:mm America/Lima
+  // Sede de pruebas (e2e/QA): se excluye del catálogo público de reservas.
+  esPrueba     Boolean   @default(false)
+  creadoEn     DateTime  @default(now()) @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @db.Timestamptz(6)
+  eliminadoEn  DateTime? @db.Timestamptz(6)
+
+  canchas  Cancha[]
+  tarifas  Tarifa[]
+  usuarios Usuario[]
+
+  @@index([esPrueba])
+}
+
+model Cancha {
+  id                  Int       @id @default(autoincrement())
+  sedeId              Int
+  nombre              String
+  tarifaBaseCentavos  Int
+  estado              EstadoCancha @default(NO_DISPONIBLE)
+  motivoNoDisponible  String?
+  creadoEn            DateTime  @default(now()) @db.Timestamptz(6)
+  actualizadoEn       DateTime  @updatedAt @db.Timestamptz(6)
+  eliminadoEn         DateTime? @db.Timestamptz(6)
+
+  sede       Sede        @relation(fields: [sedeId], references: [id], onDelete: Restrict)
+  solicitudes Solicitud[]
+  bloqueos   BloqueoCancha[]
+
+  @@unique([sedeId, nombre])
+  @@index([sedeId])
+}
+
+model Tarifa {
+  id             Int       @id @default(autoincrement())
+  sedeId         Int
+  nombre         String
+  diasSemana     Int[]    // 0=domingo..6=sábado
+  horaInicio     String   // HH:mm
+  horaFin        String   // HH:mm
+  montoCentavos  Int
+  creadoEn       DateTime  @default(now()) @db.Timestamptz(6)
+  actualizadoEn  DateTime  @updatedAt @db.Timestamptz(6)
+  eliminadoEn    DateTime? @db.Timestamptz(6)
+
+  sede Sede @relation(fields: [sedeId], references: [id], onDelete: Restrict)
+
+  @@unique([sedeId, nombre])
+}
+
+model Usuario {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  nombre       String
+  telefono     String?
+  rol          Rol       @default(USUARIO)
+  sedeId       Int?
+  creadoEn     DateTime  @default(now()) @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @db.Timestamptz(6)
+  eliminadoEn  DateTime? @db.Timestamptz(6)
+
+  sede        Sede?        @relation(fields: [sedeId], references: [id], onDelete: Restrict)
+  solicitudes Solicitud[]
+  notificaciones Notificacion[]
+  resetTokens PasswordResetToken[]
+}
+
+model Solicitud {
+  id                 Int             @id @default(autoincrement())
+  usuarioId          Int
+  canchaId           Int
+  fecha              String          // YYYY-MM-DD America/Lima
+  horaInicio         String          // HH:mm
+  horaFin            String          // HH:mm, derivada +60min
+  estado             EstadoSolicitud @default(PENDIENTE)
+  montoTotalCentavos Int
+  intento            Int             @default(1)
+  motivo             String?
+  limiteHold         DateTime?       @db.Timestamptz(6)
+  creadoEn           DateTime        @default(now()) @db.Timestamptz(6)
+  actualizadoEn      DateTime        @updatedAt @db.Timestamptz(6)
+  eliminadoEn        DateTime?       @db.Timestamptz(6)
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  cancha       Cancha        @relation(fields: [canchaId], references: [id], onDelete: Restrict)
+  comprobantes Comprobante[]
+  acciones     AccionReservaAfectada[]
+
+  // Sin doble booking: índice único PARCIAL en migración SQL
+  // (estado IN PENDIENTE/CONFIRMADA y no eliminado); la historia no bloquea.
+  @@index([canchaId, fecha, horaInicio])
+  // QA-05: los reportes filtran por mes (fecha LIKE 'AAAA-MM%').
+  @@index([fecha])
+}
+
+model Comprobante {
+  id               Int                  @id @default(autoincrement())
+  solicitudId      Int
+  proposito        PropositoComprobante
+  rutaStorage      String               @unique
+  bytes            Int
+  contentType      String
+  creadoEn         DateTime             @default(now()) @db.Timestamptz(6)
+  actualizadoEn    DateTime             @updatedAt @db.Timestamptz(6)
+  eliminadoEn      DateTime?            @db.Timestamptz(6)
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Restrict)
+
+  @@unique([solicitudId, proposito])
+  @@index([solicitudId])
+}
+
+model BloqueoCancha {
+  id          Int      @id @default(autoincrement())
+  canchaId    Int
+  fecha       String   // YYYY-MM-DD
+  horaInicio  String   // HH:mm
+  horaFin     String   // HH:mm
+  motivo      String
+  creadoEn    DateTime  @default(now()) @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @db.Timestamptz(6)
+  eliminadoEn DateTime? @db.Timestamptz(6)
+
+  cancha   Cancha                  @relation(fields: [canchaId], references: [id])
+  acciones AccionReservaAfectada[]
+
+  @@index([canchaId, fecha])
+}
+
+model AccionReservaAfectada {
+  id          Int            @id @default(autoincrement())
+  bloqueoId   Int
+  solicitudId Int
+  accion      AccionAfectada
+  detalle     String?
+  creadoEn    DateTime       @default(now()) @db.Timestamptz(6)
+
+  bloqueo   BloqueoCancha @relation(fields: [bloqueoId], references: [id])
+  solicitud Solicitud     @relation(fields: [solicitudId], references: [id])
+
+  @@unique([bloqueoId, solicitudId])
+}
+
+model Notificacion {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  solicitudId Int?
+  tipo      String
+  titulo    String
+  cuerpo    String
+  leida     Boolean  @default(false)
+  creadoEn  DateTime @default(now()) @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @db.Timestamptz(6)
+  eliminadoEn DateTime? @db.Timestamptz(6)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId, leida])
+  @@index([solicitudId])
+}
+
+model PasswordResetToken {
+  id         Int       @id @default(autoincrement())
+  usuarioId  Int
+  tokenHash  String    @unique
+  expiraEn   DateTime  @db.Timestamptz(6)
+  usado      Boolean   @default(false)
+  creadoEn   DateTime  @default(now()) @db.Timestamptz(6)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model IntentoLogin {
+  id             Int       @id @default(autoincrement())
+  identificador  String    @unique
+  intentos       Int       @default(0)
+  ultimoIntento  DateTime  @default(now()) @db.Timestamptz(6)
+  bloqueadoHasta DateTime? @db.Timestamptz(6)
+}
+
+enum EstadoOperacion {
+  pendiente
+  procesada
+  conflicto
+  fallida_terminal
+}
+
+// Cola de intenciones offline (contrato B-01 v1). El procesamiento por
+// dominio llega en B-02..; aquí solo persistencia, idempotencia y ciclo.
+model OperacionPendiente {
+  id              Int             @id @default(autoincrement())
+  usuarioId       Int
+  clienteOpId     String          // UUIDv4 generado en el dispositivo
+  tipo            String          // p.ej. solicitud.crear (tipos conocidos en lib/offline/tipos.ts)
+  carga           Json
+  cargaHash       String          // SHA256 de la carga canónica: mismo OpId distinta carga → 400
+  estado          EstadoOperacion @default(pendiente)
+  intentos        Int             @default(0)
+  proximoReintento DateTime?      @db.Timestamptz(6)
+  ultimoError     String?
+  resultado       Json?
+  creadoEn        DateTime        @default(now()) @db.Timestamptz(6)
+  actualizadoEn   DateTime        @updatedAt @db.Timestamptz(6)
+
+  @@unique([usuarioId, clienteOpId])
+  @@index([usuarioId, estado])
+}
+
+// Log de cambios para pull por cursor opaco (contrato B-01 v1).
+// Todo escritor de dominio (B-02..) debe insertar aquí en la misma transacción.
+model RegistroCambio {
+  seq        BigInt   @id @default(autoincrement())
+  tabla      String
+  filaId     Int
+  sedeId     Int?
+  usuarioId  Int?
+  eliminado  Boolean  @default(false)
+  cambiadoEn DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([seq])
+  @@index([sedeId, seq])
+  @@index([usuarioId, seq])
+}
