@@ -1,0 +1,51 @@
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  envDir: false,
+  plugins: [react()],
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src/', import.meta.url)) },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    include: [
+      'tests/unit/app/design-preview.test.tsx',
+      'tests/unit/app/raiz.test.tsx',
+      'tests/unit/app/api/cuenta.test.ts',
+      'tests/unit/app/api/disponibilidad.test.ts',
+      'tests/unit/app/api/guards.test.ts',
+      'tests/unit/app/api/rutas.test.ts',
+      'tests/unit/app/api/sedes.test.ts',
+      'tests/unit/app/api/usuarios.test.ts',
+      'tests/unit/components/admin/panel-canchas.test.tsx',
+      'tests/unit/components/admin/panel-sedes.test.tsx',
+      'tests/unit/components/admin/panel-tarifas.test.tsx',
+      'tests/unit/components/admin/selector-sede.test.tsx',
+      'tests/unit/components/auth/formulario-registro.test.tsx',
+      'tests/unit/components/bloqueos/panel-bloqueos.test.tsx',
+      'tests/unit/components/cuenta/panel-cuenta.test.tsx',
+      'tests/unit/components/public/sesion-portada.test.tsx',
+      'tests/unit/components/reservas/formulario-solicitud.test.tsx',
+      'tests/unit/lib/design-tokens.test.ts',
+      'tests/unit/lib/auth/hash.test.ts',
+      'tests/unit/lib/auth/sesion.test.ts',
+      'tests/unit/lib/auth/throttle.test.ts',
+      'tests/unit/lib/auth/validacion.test.ts',
+      'tests/unit/lib/auth/correo-memoria.test.ts',
+      'tests/unit/lib/http/clasificar-error.test.ts',
+      'tests/unit/lib/offline/bd-local.test.ts',
+      'tests/unit/lib/offline/contrato.test.ts',
+      'tests/unit/lib/offline/decidir-envio.test.ts',
+      'tests/unit/lib/offline/guard-ssr.test.ts',
+      'tests/unit/lib/offline/recordatorios-locales.test.ts',
+      'tests/unit/lib/offline/sincronizar.test.ts',
+      'tests/unit/lib/panel/kpis.test.ts',
+      'tests/unit/lib/panel/metricas.test.ts',
+      'tests/unit/lib/ui/reloj-lima.test.ts',
+    ],
+  },
+});

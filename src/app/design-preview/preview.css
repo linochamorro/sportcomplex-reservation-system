@@ -1,0 +1,17 @@
+/* Estilos SOLO de la vista previa (no son el producto). */
+.pv-raiz { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+.pv-muestra { display: flex; gap: 12px; align-items: center; margin: 4px 0; }
+.pv-pastilla { width: 48px; height: 24px; border: 1px solid var(--border); border-radius: 6px; display: inline-block; }
+.pv-estado { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 12px 0; background: var(--surface); }
+.pv-insignia { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
+.pv-patron-rayado-45 { background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(0,0,0,.08) 6px 8px) !important; }
+.pv-patron-rayado-inverso { background-image: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(0,0,0,.08) 6px 8px) !important; }
+.pv-patron-punteado { background-image: radial-gradient(rgba(0,0,0,.15) 1px, transparent 1px) !important; background-size: 8px 8px; }
+.pv-patron-trama { background-image: repeating-linear-gradient(0deg, transparent 0 4px, rgba(255,255,255,.08) 4px 5px) !important; }
+.pv-patron-animado { background-image: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent) !important; }
+.pv-display { font-family: "Barlow Condensed", system-ui, sans-serif; font-size: 31px; font-weight: 700; }
+.pv-raiz button { background: var(--action-primary-bg); color: var(--white); border: 0; border-radius: 6px; padding: 10px 20px; font-size: 16px; }
+.pv-raiz button:disabled { background: var(--mist); color: var(--text-secondary); }
+.pv-banner { background: var(--amber-50); color: var(--amber-950); border: 1px solid var(--amber-500); border-radius: 6px; padding: 12px; margin: 8px 0; }
+.pv-esqueleto { display: grid; gap: 8px; margin: 8px 0; }
+.pv-linea { display: block; height: 16px; border-radius: 4px; background: var(--mist); }
