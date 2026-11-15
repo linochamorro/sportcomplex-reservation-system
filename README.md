@@ -74,7 +74,7 @@ No ejecutes migraciones o utilidades que escriban datos contra una base comparti
 | `npm run test:e2e` | Playwright en Chromium; inicia build y servidor local según `playwright.config.ts` |
 | `npm run build` | Build de producción; requiere configuración compatible con el código y sus dependencias |
 
-El workflow de CI en `.github/workflows/ci.yml` ejecuta instalación, `typecheck`, `lint` y `test:unit`. Esto describe el workflow configurado, no el resultado de una ejecución concreta. El conjunto unitario se describe genéricamente mientras se resuelve su conteo definitivo.
+El workflow de CI en `.github/workflows/ci.yml` ejecuta instalación, `typecheck`, `lint` y `test:unit` (33 archivos, 119 pruebas aisladas sin dependencia de base de datos). Esto describe el workflow configurado y la suite unitaria actual, no el funcionamiento de proveedores externos ni de un despliegue.
 
 Las pruebas de integración y E2E pueden operar sobre estado persistente y no se deben dirigir a datos reales. El conjunto unitario tampoco certifica el funcionamiento de proveedores externos o de un despliegue.
 
@@ -125,8 +125,6 @@ Algunos scripts requieren configuración de servicios o pueden realizar escritur
 - [Arquitectura](docs/architecture/00-overview.md)
 - [Índice de decisiones](docs/decisions/index.md)
 - [Contrato de sincronización](docs/SYNC_INVARIANTES.md)
-- [Especificación](docs/sdd/spec.md)
-- [Procedimientos](docs/runbooks/)
 
 ## Licencia
 

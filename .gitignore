@@ -16,4 +16,4 @@ next-env.d.ts
 .env.local
 docs/capturas-raw/
 temporary/
-e2e/.semilla-e2e.json
+tests/e2e/.semilla-e2e.json
